@@ -1,0 +1,18 @@
+<root id="~">
+  <folder id="files">
+    <file id="recipe_hex">
+      <p>0000000: 626c 7565 3d35 3025 0a</p>
+      <p>0000001: 6c62 6575 3025 3d35 0a</p>
+    </file>
+    <file id="first_hex">
+      <p>00000000: 7475 6265 313d 352e 30</p>
+    </file>
+    <file id="second_hex">
+      <p>00000000: 7475 6265 323d 5734 4368 3459</p>
+    </file>
+  </folder>
+  <file id="readme_txt">
+    <p>DO NOT RUN DISPENSER, UNLESS YOU KNOW VALUES ARE CORRECT</p>
+    <p>Irregularities are present in some files that may need to be corrected.</p>
+  </file>
+</root>

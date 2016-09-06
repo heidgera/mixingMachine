@@ -1,0 +1,50 @@
+<html>
+  <div class="help resp">
+    <p>cd :: change directory</p>
+    <p>ls :: list the contents of the current directory</p>
+    <p>convert :: convert files between .hex and .txt</p>
+    <p>dispense :: control dispensing apparatus</p>
+    <p>display:: display contents of a file</p>
+  </div>
+  <div class="unrecognized resp">
+    Command not found; type "help" for commands.
+  </div>
+  <div class="noDir resp">
+    No such file or directory.
+  </div>
+  <div class="welcome resp">
+    Welcome, ADMIN. It's been 32 days since your last login.
+  </div>
+  <div class="displayHelp resp">
+    <p>Use this function to display the contents of a file</p>
+    <p>USAGE: display [filename]</p>
+  </div>
+  <div class="dispHelp resp">
+    <p>Use this function to control the dispensing apparatus</p>
+    <p>USAGE: dispense -f [filename.hex]</p>
+  </div>
+  <div class="wrongFile resp">
+    <p>Invalid file format; convert file to hex and try again.</p>
+  </div>
+  <div class="cdHelp resp">
+    <p>Use this function to change the current directory.</p>
+    <!-- <p>Call a folder name to move to that directory,</p>
+    <p>or ".." to go to the parent directory</p> -->
+    <br />
+    <p>TO MOVE TO FOLDER: </p><p>&nbsp;&nbsp;&nbsp;cd [folderName]</p>
+    <p>TO GO TO PARENT FOLDER: </p><p>&nbsp;&nbsp;&nbsp;cd ..</p>
+  </div>
+  <div class="dispensing resp">
+    <p>Dispensing, please wait...</p>
+  </div>
+  <div class="invalid resp">
+    <p>File is damaged or corrupt: convert to .txt file, and display to see errors</p>
+    <p>File should be of format:</p>
+    <p>&nbsp;&nbsp;&nbsp;[dispenser_name]=[time to run in seconds]</p>
+  </div>
+  <div class="writeHelp resp">
+    <p>Use this function to write a file to the disk</p>
+    <p>USAGE: write -c [content] -f [filename]</p>
+    <p>EXAMPLE: write -c "This is the content" -f name.txt</p>
+  </div>
+</html>

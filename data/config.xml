@@ -1,0 +1,27 @@
+<config>
+  <muteTimeout type="num">600</muteTimeout>
+  <green type="object">
+    <hex>#1f0</hex>
+    <fill>#030</fill>
+  </green>
+  <red type="object">
+    <hex>#f39</hex>
+    <fill>#301</fill>
+  </red>
+  <blue type="object">
+    <hex>#0cf</hex>
+    <fill>#023</fill>
+  </blue>
+  <orange type="object">
+    <hex>#fa0</hex>
+    <fill>#320</fill>
+  </orange>
+  <violet type="object">
+    <hex>#c7f</hex>
+    <fill>#303</fill>
+  </violet>
+  <yellow type="object">
+    <hex>#ff0</hex>
+    <fill>#330</fill>
+  </yellow>
+</config>

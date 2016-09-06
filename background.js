@@ -1,0 +1,21 @@
+/**
+ * Listens for the app launching, then creates the window.
+ *
+ * @see http://developer.chrome.com/apps/app.runtime.html
+ * @see http://developer.chrome.com/apps/app.window.html
+ */
+chrome.app.runtime.onLaunched.addListener(function(launchData) {
+  chrome.app.window.create(
+    'index.html',
+    {
+      //id: 'mainWindow',
+      bounds: { width: 1366, height: 768 },
+
+      //state: 'fullscreen',
+    },
+    function(win) {
+      win.contentWindow.isApp = true; win.contentWindow.requestFullscreen();
+    }
+      );
+
+});
