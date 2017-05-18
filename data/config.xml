@@ -1,27 +1,57 @@
 <config>
   <muteTimeout type="num">600</muteTimeout>
-  <green type="object">
-    <hex>#1f0</hex>
-    <fill>#030</fill>
-  </green>
   <red type="object">
-    <hex>#f39</hex>
+    <hex>#f00</hex>
+    <led  type="object">
+      <r type="num">255</r>
+      <g type="num">0</g>
+      <b type="num">0</b>
+    </led>
     <fill>#301</fill>
   </red>
+  <green type="object">
+    <hex>#1f0</hex>
+    <led  type="object">
+      <r type="num">17</r>
+      <g type="num">255</g>
+      <b type="num">0</b>
+    </led>
+    <fill>#030</fill>
+  </green>
   <blue type="object">
     <hex>#0cf</hex>
+    <led  type="object">
+      <r type="num">0</r>
+      <g type="num">204</g>
+      <b type="num">255</b>
+    </led>
     <fill>#023</fill>
   </blue>
   <orange type="object">
-    <hex>#fa0</hex>
+    <hex>#f70</hex>
+    <led  type="object">
+      <r type="num">255</r>
+      <g type="num">119</g>
+      <b type="num">0</b>
+    </led>
     <fill>#320</fill>
   </orange>
   <violet type="object">
-    <hex>#c7f</hex>
+    <hex>#c3f</hex>
+    <led  type="object">
+      <r type="num">204</r>
+      <g type="num">51</g>
+      <b type="num">255</b>
+    </led>
     <fill>#303</fill>
   </violet>
   <yellow type="object">
     <hex>#ff0</hex>
+    <led type="object">
+      <r type="num">255</r>
+      <g type="num">255</g>
+      <b type="num">0</b>
+    </led>
     <fill>#330</fill>
   </yellow>
 </config>

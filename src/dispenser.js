@@ -5,6 +5,8 @@ include(['src/keypad.js'], function() {
   if (window.isApp === true) localStore = chrome.storage.local, console.log('app');
   else localStore  = localStorage;
 
+  var pause = 0;
+
   var dispenser = inheritFrom(HTMLElement, function() {
     this.createdCallback = function() {
       var _this = this;
@@ -16,8 +18,8 @@ include(['src/keypad.js'], function() {
       //this.stroke = µ('|>stroke', this);
       this.fill = µ('|>fill', this);
       this.num = µ('|>output', this);
-      this.output = µ('#tube' + this.num);
-      this.resetPin = µ('#reset' + this.num);
+      this.valve = this.num * 2 + 1;
+      this.limit = µ('#float' + this.num);
       this.time = µ('|>time', this);
       this.attempts = 10;
       this.done = false;
@@ -25,6 +27,8 @@ include(['src/keypad.js'], function() {
 
       this.failTime = 30;
       this.fail = false;
+
+      //var aux = ;
 
       var codeKey = 'dispenseCode' + _this.num;
       localStore.get(codeKey, function(resp) {
@@ -206,7 +210,7 @@ include(['src/keypad.js'], function() {
           _this.text.textContent = _this.keypad.input = '';
           this.programMode = true;
           this.instruct.textContent = 'Enter new code.';
-        } else if (this.keypad.input == '31415') {
+        } else if (this.keypad.input == '31415926') {
           //_this.text.textContent = _this.keypad.input = '';
           //this.programMode = true;
           //this.instruct.textContent = 'Enter new code.';
@@ -224,28 +228,180 @@ include(['src/keypad.js'], function() {
         }
       };
 
-      this.reset = function(fxn) {
-        var key = 'dispense' + _this.num;
-        localStore.get(key, function(resp) {
-          if (resp[key] == 'true' && µ('hard-ware').ready) {
-            console.log('resetting ' + _this.num);
-            _this.output.write(0);
-            _this.resetPin.write(1);
-            setTimeout(function() {
-              _this.output.write(0);
-              _this.resetPin.write(0);
-              var store = {};
-              store[key] = '';
-              store[key] += false;
-              localStore.set(store);
-              console.log('done resetting ' + _this.num);
-              fxn();
-            }, _this.time);
-          } else {
-            console.log('tube ' + _this.num + ' does not need resetting');
-            fxn();
+      _this.stopPump = function(cb) {
+        µ('#PumpEn').write(0);
+        setTimeout(()=> {
+          µ('#PumpDir').write(0);
+          if (cb) cb();
+          pause = false;
+        }, 500);
+      };
+
+      _this.stop = (cb)=> {
+        this.pumpUp = false;
+        this.pumpDown = false;
+        pause = true;
+        _this.stopPump(()=> {
+          var disps = µ('disp-enser');
+          for (var i = 0; i < disps.length; i++) {
+            if (disps[i] != _this) disps[i].setValve(0);
           }
+
+          _this.setValve(0);
+          setTimeout(cb, 500);
         });
+      };
+
+      var drainTimeout = null;
+      _this.checkTimeout = null;
+
+      var shutoffReading = ()=> {
+        µ('disp-enser').forEach((item)=> {
+          clearInterval(item.limitReadInt);
+        });
+      };
+
+      _this.limit.onData = function(val) {
+        if (!pause) {
+          if (_this.checkTimeout) clearTimeout(_this.checkTimeout);
+          _this.checkTimeout = setTimeout(()=> {
+            _this.stop(()=> {
+              console.log('missed a read from ' + _this.num);
+              _this.limit.read();
+            });
+          }, (_this.pumpUp) ? 2000 : 3000);
+          if (val) {
+            //console.log('At Limit');
+            if (_this.filling && _this.pumpUp) {
+              console.log('stop filling');
+              _this.parentElement.filling = null;
+              _this.filled = true;
+              _this.filling = false;
+              _this.stop(_this.keepLevel);
+              _this.fillNext = true;
+            } else if (_this.parentElement.filling && !_this.pumpUp) {
+              if (_this.parentElement.filling.pumpUp) {
+                console.log('stop filling current column, drain this column');
+                _this.parentElement.filling.stop(_this.keepLevel);
+              }
+            } else if (!_this.drainBack && !_this.parentElement.draining) {
+              _this.keepLevel();
+              console.log('drain tube at max, no other tube working');
+            }
+
+            if (!_this.pumpDown && _this.drainBack) _this.drain();
+          } else if (!val) {
+            //console.log('Not at limit');
+            if (_this.drainBack && _this.pumpDown) {
+              console.log('stop draining back');
+              clearTimeout(drainTimeout);
+              _this.drainBack = false;
+              _this.stop(()=> {
+                console.log('stopped draining');
+                _this.parentElement.draining = null;
+                _this.draining = false;
+                if (_this.fillNext) {
+                  _this.fillNext = false;
+                  if (_this.nextElementSibling) {
+                    console.log('Fill next, if available');
+                    if (parseInt(_this.num) != 4) _this.nextElementSibling.fillUp();
+                    else _this.nextElementSibling.nextElementSibling.fillUp();
+                  } else shutoffReading();
+                } else if (_this.parentElement.filling) {
+                  console.log('continue filling original column');
+                  _this.parentElement.filling.fillUp();
+                }
+              });
+
+            } else if (!_this.pumpUp && _this.filling) {
+              console.log('begin filling');
+              _this.fill();
+            }
+          }
+        }
+      };
+
+      /*_this.limit.onData = function(val) {
+        if (_this.checkTimeout) clearTimeout(_this.checkTimeout);
+        _this.checkTimeout = setTimeout(()=> {
+          console.log('have not heard recently');
+        }, 1500);
+      };*/
+
+      //TODO: make this simply drain any tube that is reading at limit until it doesn't
+      //or not, Idk what's better
+
+      this.fillUp = () => {
+        _this.filling = true;
+      };
+
+      this.keepLevel = () => {
+        console.log('keeping level');
+        _this.drainBack = true;
+      };
+
+      this.setValve = (val) => {
+        µ('#board').arduino.auxBoard.digitalWrite(_this.valve, val);
+      };
+
+      this.init = () => {
+        µ('con-fig').whenLoaded(function() {
+          var col = µ('con-fig')[_this.color].led;
+          µ('#board').arduino.auxBoard.ledWrite(_this.num * 2, col.r, col.g, col.b);
+        });
+
+        setTimeout(()=> {
+          _this.limitReadInt = setInterval(_this.limit.read, 750);
+        }, 100 * _this.num);
+      };
+
+      this.fill = () => {
+        if ((_this.parentElement.filling == _this || !_this.parentElement.filling) && !_this.parentElement.draining) {
+          _this.pumpUp = true;
+          _this.parentElement.filling = _this;
+          console.log('filling');
+          _this.filling = true;
+          var disps = µ('disp-enser');
+          for (var i = 0; i < disps.length; i++) {
+            if (disps[i] != _this) disps[i].setValve(1);
+          }
+
+          this.setValve(0);
+          pause = true;
+
+          µ('#PumpDir').write(1);
+          setTimeout(()=> {
+            µ('#PumpEn').write(1);
+            pause = false;
+          }, 500);
+        }
+      };
+
+      _this.drain = () => {
+        if ((!_this.parentElement.filling || !_this.parentElement.filling.pumpUp) && !_this.parentElement.draining) {
+          _this.limit.read();
+          console.log('draining');
+          _this.pumpDown = true;
+          _this.parentElement.draining = _this;
+          _this.draining = true;
+          pause = true;
+          var disps = µ('disp-enser');
+          for (var i = 0; i < disps.length; i++) {
+            if (disps[i] != _this) disps[i].setValve(0);
+          }
+
+          this.setValve(1);
+
+          µ('#PumpDir').write(0);
+          setTimeout(()=> {
+            µ('#PumpEn').write(1);
+            pause = false;
+          }, 500);
+        }
+      };
+
+      this.reset = function(fxn) {
+
       };
 
       this.dispense = function() {
@@ -253,12 +409,16 @@ include(['src/keypad.js'], function() {
         _this.dispensing = true;
 
         if (µ('hard-ware').ready) {
-          _this.resetPin.write(0);
-          _this.output.write(1);
+          this.drain();
         }
 
         _this.audStart.play();
         setTimeout(function() {
+          _this.stop(()=> {
+            console.log('stopped');
+            _this.parentElement.draining = null;
+            _this.draining = false;
+          });
           _this.audSteady.pause();
           _this.audEnd.play();
           _this.dispensing = false;
@@ -294,12 +454,23 @@ include(['src/keypad.js'], function() {
             _this.close();
             µ('#complete').style.display = 'block';
             _this.mixAudio.play();
-            setTimeout(function() {
-              µ('#cylinder').write(0);
+            _this.mixAudio.onended = () => {
+              µ('#fogTrig').write(1);
+              µ('#LinDir').write(1);
+              setTimeout(()=> {
+                µ('#LinEn').write(1);
+                setTimeout(()=> {
+                  µ('#LinEn').write(0);
+                  setTimeout(()=> {
+                    µ('#LinDir').write(0);
+                    µ('#fogTrig').write(0);
+                  }, 500);
+                }, 15000);
+              }, 500);
               console.log('released cylinder');
               µ('div', µ('#complete')).innerHTML = '';
               µ('div', µ('#complete')).textContent = 'Process Complete';
-            }, 9000);
+            };
           }
 
           var key = 'dispense' + _this.num;
@@ -307,8 +478,9 @@ include(['src/keypad.js'], function() {
           store[key] = '';
           store[key] += true;
           localStore.set(store);
-          if (µ('hard-ware').ready)
-            _this.output.write(0);
+
+          //if (µ('hard-ware').ready)
+          //_this.output.write(0);
         }, this.time);
       };
 

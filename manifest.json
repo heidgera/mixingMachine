@@ -3,7 +3,7 @@
   "name": "MixerMachine",
   "short_name": "Mixer",
   "description": "",
-  "version": "0.0.8",
+  "version": "0.1.0",
   "minimum_chrome_version": "38",
 
   "icons": {

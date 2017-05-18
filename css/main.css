@@ -34,8 +34,8 @@ body {
 }
 
 .red {
-  color: #f39;
-  border-color: #f39;
+  color: #f10;
+  border-color: #f10;
 }
 
 .blue {
@@ -44,13 +44,13 @@ body {
 }
 
 .orange {
-  color: #fa0;
-  border-color: #fa0;
+  color: #f70;
+  border-color: #f70;
 }
 
 .violet {
-  color: #c7f;
-  border-color: #c7f;
+  color: #c3f;
+  border-color: #c3f;
 }
 
 .yellow {

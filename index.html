@@ -3,22 +3,21 @@
     <meta content='width=device-width, user-scalable=0' name='viewport' />
     <link rel="stylesheet" href="css/main.css"></link>
     <script src="src/vendor/muse/include.js" main="src/app.js"></script>
-    <hard-ware serialport="COM4">
-      <out-put id="reset1" type="digital" pin="2"></out-put>
-      <out-put id="tube1" type="digital" pin="3"></out-put>
-      <out-put id="reset2" type="digital" pin="5"></out-put>
-      <out-put id="tube2" type="digital" pin="4"></out-put>
-      <out-put id="reset3" type="digital" pin="7"></out-put>
-      <out-put id="tube3" type="digital" pin="6"></out-put>
-      <out-put id="tube4" type="digital" pin="12"></out-put>
-      <out-put id="reset4" type="digital" pin="13"></out-put>
-      <out-put id="tube5" type="digital" pin="16"></out-put>
-      <out-put id="reset5" type="digital" pin="17"></out-put>
-      <out-put id="tube6" type="digital" pin="18"></out-put>
-      <out-put id="reset6" type="digital" pin="19"></out-put>
-      <out-put id="cylinder" type="digital" pin="10"></out-put>
-      <in-put id="auth" type="digital" debounce="100" pin="14"></in-put>
-      <in-put id="fullReset" type='digital' debounce='100' pin='9'></in-put>
+    <hard-ware id='board' serialport="">
+      <out-put id="LinDir" type="digital" pin="3"></out-put>
+      <!-- LinDir 1 = down 0 = up-->
+      <out-put id="PumpDir" type="digital" pin="5"></out-put>
+      <!-- PumpDir 1 = fill 0 = drain -->
+      <out-put id="PumpEn" type="digital" pin="10"></out-put>
+      <out-put id="LinEn" type="digital" pin="11"></out-put>
+      <out-put id="fogTrig" type="digital" pin="9"></out-put>
+      <in-put id="auth" type="digital"pin="14"></in-put>
+      <in-put id="float1" type="digital" pin="2"></in-put>
+      <in-put id="float2" type="digital" pin="4"></in-put>
+      <in-put id="float3" type="digital" pin="7"></in-put>
+      <in-put id="float4" type="digital" pin="8"></in-put>
+      <in-put id="float5" type="digital" pin="12"></in-put>
+      <in-put id="float6" type="digital" pin="13"></in-put>
     </hard-ware>
     <con-fig file="data/config.xml"></con-fig>
     <template id="interfaceTemp">
@@ -38,12 +37,12 @@
   </head>
   <body>
     <div id="fluidSelect">
-      <disp-enser  id="N2" code="323" output="1" color='green' time="27000"></disp-enser>
-      <disp-enser  id="H2SO4" code="301" output="2" color='red' time="23000"></disp-enser>
-      <disp-enser  id="SF6" code="76" output="3" color='blue' time="16000"></disp-enser>
-      <disp-enser  id="ClF3" code="85" output="4" color='orange' time="18000"></disp-enser>
-      <disp-enser  id="AsH3O4" code="48" output="5" color='violet' time="15000"></disp-enser>
-      <disp-enser  id="NaCN" code="960" output="6" color='yellow' time="30000"></disp-enser>
+      <disp-enser  id="N2" code="323" output="1" color='red' time="17000"></disp-enser>
+      <disp-enser  id="H2SO4" code="301" output="2" color='green' time="23000"></disp-enser>
+      <disp-enser  id="SF6" code="76" output="3" color='blue' time="11000"></disp-enser>
+      <disp-enser  id="ClF3" code="85" output="4" color='orange' time="20000"></disp-enser>
+      <disp-enser  id="AsH3O4" code="48" output="5" color='violet' time="2000"></disp-enser>
+      <disp-enser  id="NaCN" code="960" output="6" color='yellow' time="9000"></disp-enser>
       <!-- <disp-enser  class="block" code="1234" output="tube1" color='green' fill='#030' stroke='#1f0' time="5000"></disp-enser>
       <disp-enser  class="block" code="1234" output="tube2" color='red' fill='#300' stroke='#f10' time="5000"></disp-enser>
       <disp-enser  class="block" code="1234" output="tube2" color='blue' fill='#013' stroke='#0cf' time="5000"></disp-enser>

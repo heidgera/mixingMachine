@@ -2,7 +2,7 @@ var localStore = null;
 var hardwareJS = '';
 if (window.isApp === true) {
   localStore = chrome.storage.local;
-  hardwareJS = './hardwareApp.js';
+  hardwareJS = './hardwareChromeApp.js';
 } else {
   localStore  = localStorage;
   hardwareJS = './hardware.js';
@@ -29,11 +29,11 @@ include([hardwareJS, './config.js', 'src/dispenser.js', 'src/button.js', 'src/in
   µ('#complete').spin.style.width = '25%';
   µ('#complete').spin.style.left = '37.5%';
 
-  function resetNext(num) {
+  /*function resetNext(num) {
     var key = 'dispense' + num;
     if (num < 7)
       µ('disp-enser:nth-child(' + num + ')').reset(function() {resetNext(num + 1);});
-  }
+  }*/
 
   var authClock = null;
 
@@ -44,9 +44,10 @@ include([hardwareJS, './config.js', 'src/dispenser.js', 'src/button.js', 'src/in
     console.log('should be reading');
   }, 500);*/
 
+  //store teh settings from the settings dialog when 'okay is clicked'
+  //also resets the program after storing the data
+
   µ('#setOkay').onClick = function() {
-    //console.log(µ('#invertSwitch').checked);
-    //console.log(µ('#serialSelect').value + ' is the new serialPort');
 
     var invKey = 'invertSwitch';
     var serialKey = 'serialPort';
@@ -59,27 +60,38 @@ include([hardwareJS, './config.js', 'src/dispenser.js', 'src/button.js', 'src/in
     localStore.set(store);
 
     µ('#settings').style.display = 'none';
+    chrome.runtime.reload();
+    chrome.runtime.restart();
   };
 
+  //close the settings dialog on cancel press
   µ('#setCancel').onClick = function() {
     µ('#settings').style.display = 'none';
   };
 
+  //if there is stored data about the serialPort or mouse inversion, grab and
+  //use it
   var codeKey = ['invertSwitch', 'serialPort'];
   localStore.get(codeKey, function(resp) {
     console.log('searching storage');
     console.log(resp);
     if (resp.serialPort != null) {
       µ('hard-ware').port = resp.serialPort;
-      console.log(resp.serialPort + ' is the serial response');
+      var s = µ('#serialSelect');
+      for (var i = 0; i < s.options.length; i++) {
+        if (s.options[i].value == µ('hard-ware').port) {
+          s.options[i].selected = true;
+          return;
+        }
+      }
     }
 
     if (resp.invertSwitch != null) {
-      //µ('hard-ware').port = resp['serialKey'];
       window.invertMouse = (resp.invertSwitch == 'true');
-      console.log(resp.invertSwitch + ' is the serial response');
+      µ('#invertSwitch').checked = window.invertMouse;
     }
 
+    //connect the arduino; function passed is used when available ports are listed
     µ('hard-ware').begin(function(ports) {
       for (var i = 0; i < ports.length; i++) {
         var opt = document.createElement('option');
@@ -89,6 +101,7 @@ include([hardwareJS, './config.js', 'src/dispenser.js', 'src/button.js', 'src/in
     });
   });
 
+  //
   µ('hard-ware').onReady = function() {
     if (authLockout) {
       authClock = setInterval(function() {
@@ -96,12 +109,40 @@ include([hardwareJS, './config.js', 'src/dispenser.js', 'src/button.js', 'src/in
       }, 500);
     }
 
-    resetNext(1);
-    µ('#cylinder').write(1);
+    var disps = µ('disp-enser');
+    for (var i = 0; i < disps.length; i++) {
+      disps[i].init();
+    }
+
+    //resetNext(1);
+    //disps[0].fillUp();
+
+    //µ('#cylinder').write(1);
+
+    /*µ('#LinDir').write(0);
+    setTimeout(()=> {
+      µ('#LinEn').write(1);
+      setTimeout(()=> {
+        µ('#LinEn').write(0);
+        setTimeout(()=> {
+          µ('#LinDir').write(0);
+          µ('#fogTrig').write(0);
+
+          //µ('hard-ware').arduino.auxBoard.digitalWrite(15, 0);
+        }, 500);
+      }, 15000);
+    }, 500);*/
+  };
+
+  µ('#PumpEn').onError = ()=> {
+    //µ('disp-enser')[0].stop();
+    //console.log('errored!');
+    µ('#PumpEn').write(µ('#PumpEn').state);
   };
 
   µ('#auth').onData = function(val) {
-    if (val) {
+    if (!val) {
+      µ('hard-ware').arduino.auxBoard.digitalWrite(15, 1);
       authLockout = false;
       µ('#authLock').style.display = 'none';
       console.log('unlock');
@@ -110,18 +151,18 @@ include([hardwareJS, './config.js', 'src/dispenser.js', 'src/button.js', 'src/in
     }
   };
 
-  µ('#fullReset').onData = function(val) {
+  /*µ('#fullReset').onData = function(val) {
     if (val) {
       //resetNext(1);
       chrome.runtime.reload();
 
       //location.reload();
     }
-  };
+  };*/
 
   function touchHandler(event) {
-    var first = event.changedTouches[0],
-        type = '';
+    var first = event.changedTouches[0];
+    var type = '';
     switch (event.type)
     {
       case 'touchstart': type = 'mousedown'; break;
@@ -138,7 +179,7 @@ include([hardwareJS, './config.js', 'src/dispenser.js', 'src/button.js', 'src/in
     simulatedEvent.initMouseEvent(type, true, true, window, 1,
                                   first.screenX, first.screenY,
                                   first.clientX, first.clientY, false,
-                                  false, false, false, 0/*left*/, null);
+                                  false, false, false, 0, null);
 
     first.target.dispatchEvent(simulatedEvent);
     event.preventDefault();
@@ -153,12 +194,30 @@ include([hardwareJS, './config.js', 'src/dispenser.js', 'src/button.js', 'src/in
 
     e.preventDefault();
     var press = String.fromCharCode(e.keyCode);
-    if (press == ' ') {
-      console.log('release');
-      µ('#cylinder').write(0);
-    } else if (press == '=') {
+    if (press == ']') {
       console.log('close');
-      µ('#cylinder').write(1);
+      µ('#LinDir').write(0);
+      setTimeout(()=> {
+        µ('#LinEn').write(1);
+        setTimeout(()=> {
+          µ('#LinEn').write(0);
+          setTimeout(()=> {
+            µ('#LinDir').write(0);
+          }, 500);
+        }, 10000);
+      }, 500);
+    } else if (press == '[') {
+      console.log('open');
+      µ('#LinDir').write(1);
+      setTimeout(()=> {
+        µ('#LinEn').write(1);
+        setTimeout(()=> {
+          µ('#LinEn').write(0);
+          setTimeout(()=> {
+            µ('#LinDir').write(0);
+          }, 500);
+        }, 10000);
+      }, 500);
     }
 
   };
@@ -170,38 +229,6 @@ include([hardwareJS, './config.js', 'src/dispenser.js', 'src/button.js', 'src/in
   var minTimer = null;
 
   document.onkeydown = function(e) {
-    for (var i = 0; i < 6; i++) {
-      if (String.fromCharCode(e.which) == outputs[i]) {
-        µ('#reset' + (i + 1)).write(1);
-        µ('#tube' + (i + 1)).write(0);
-      } else if (String.fromCharCode(e.which) == resets[i]) {
-        µ('#reset' + (i + 1)).write(0);
-        µ('#tube' + (i + 1)).write(1);
-      } else if (String.fromCharCode(e.which) == minReset[i]) {
-        for (var j = 0; j < 6; j++) {
-          µ('#tube' + (j + 1)).write(0);
-          µ('#reset' + (j + 1)).write(0);
-          console.log((j + 1) + ' stopped');
-          clearTimeout(minTimer);
-        }
-
-        µ('#reset' + (i + 1)).write(1);
-        µ('#tube' + (i + 1)).write(0);
-        console.log('start ' + (i + 1));
-        var tubeStop = µ('#reset' + (i + 1));
-
-        setTimeout(function() {
-          tubeStop.write(1);
-        }, 250);
-
-        //minTimers[minReset[i]]
-        console.log('setting timeout for ' + (i + 1));
-        minTimer = setTimeout(function() {
-          tubeStop.write(0);
-          console.log('auto stop ' + tubeStop.id);
-        }, 180000);
-      }
-    }
 
     if (String.fromCharCode(e.which) == 'U') {
       authLockout = false;
@@ -211,14 +238,6 @@ include([hardwareJS, './config.js', 'src/dispenser.js', 'src/button.js', 'src/in
   };
 
   document.onkeyup = function(e) {
-    for (var i = 0; i < 6; i++) {
-      if (String.fromCharCode(e.which) == outputs[i] ||
-       String.fromCharCode(e.which) == resets[i]) {
-        µ('#tube' + (i + 1)).write(0);
-        µ('#reset' + (i + 1)).write(0);
-        if (minTimers[minReset[i]])
-          clearTimeout(minTimers[minReset[i]]);
-      }
-    }
+
   };
 });
